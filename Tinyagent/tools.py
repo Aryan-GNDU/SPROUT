@@ -208,6 +208,10 @@ class Skills(NativeTools):
     available in the system prompt, but the full instructions are only injected
     when the agent **activates** a skill (uses it as a tool).
     """
+    def __init__(self, requires_approval=None):
+        super().__init__(requires_approval=requires_approval or [])
+        self.skills = {}
+
 
     def add_skill(self, path: str):
         """Load a SKILL.md file and register it as a callable tool."""
@@ -225,11 +229,15 @@ class Skills(NativeTools):
             return instructions
 
         skill.__name__ = name
-        skill.__doc__ = f"A skill that when activated provides the following context: '{description}'"
+        skill.__doc__ = description
         skill.__signature__ = (
             inspect.Signature()
         )  # schema sees no params; lambda still tolerates any
-        self.add_tool(name, skill, skill.__doc__)
+        self.add_tool(name, skill, description)
+        self.skills[name] = {
+            "description": description,
+            "path": str(Path(path).resolve()),
+        }
 
     @property
     def prompt(self):

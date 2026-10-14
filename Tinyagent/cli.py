@@ -1,5 +1,6 @@
 import argparse
 import re
+from pathlib import Path
 from Tinyagent.agent import LLM, TinyAgent
 from Tinyagent.planning import NativeReAct
 from Tinyagent.memory import MultimodalMemory
@@ -108,7 +109,9 @@ def handle_command(cmd, agent):
 
     # `/skills` command lists available skills with descriptions
     elif cmd == "/skills":
-        for name, skill in agent.skills.skills.items():
+        if not agent.tools.skills:
+            console.print("  No skills loaded.")
+        for name, skill in agent.tools.skills.items():
             console.print(
                 f"  [magenta]{name}[/] - [dim]{skill['description']}[/]"
             )
@@ -157,6 +160,10 @@ def main():
 
     # Tools and Skills
     tools = create_native_code_tools()
+
+    skill_dir = Path(__file__).parent / "skills"
+    for skill_file in sorted(skill_dir.glob("*/SKILL.md")):
+        tools.add_skill(str(skill_file))
 
     # ReAct planner with native reasoning and tool calling (no text parsing needed)
     planner = NativeReAct(max_steps=10)

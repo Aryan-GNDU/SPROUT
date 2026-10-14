@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="Tinyagent/assests/sprout.svg" alt="SPROUT green seedling logo" width="280">
+<img src="Tinyagent/assests/sprout.svg" alt="SPROUT seedling logo" width="220">
 
 # S P R O U T
 
@@ -12,38 +12,38 @@
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Ollama](https://img.shields.io/badge/runs%20on-Ollama-34c759?style=for-the-badge)
-![Tool Calling](https://img.shields.io/badge/native-tool%20calling-1b7f3b?style=for-the-badge)
+![Native Tool Calling](https://img.shields.io/badge/native-tool%20calling-1b7f3b?style=for-the-badge)
 ![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue?style=for-the-badge)
 
 <br>
 
-[Features](#-features) · [Quick Start](#-quick-start) · [Configuration](#%EF%B8%8F-configuration) · [CLI](#-using-the-cli) · [Tools](#-built-in-tools) · [Structure](#-project-structure) · [Safety](#-safety-notes)
+[Features](#features) · [Quick Start](#quick-start) · [Configuration](#configuration) · [CLI](#using-the-cli) · [Tools](#built-in-tools) · [Architecture](#how-it-works) · [Safety](#safety-notes)
 
 </div>
 
 <br>
 
-SPROUT is an experimental terminal agent built to explore how language models, tool calling, memory, and planning fit together. It connects to Ollama's OpenAI-compatible API and includes tools for inspecting and working with files in the directory where it is launched.
+SPROUT is an experimental terminal agent for exploring how language models, tool calling, memory, and planning fit together. It connects to Ollama's OpenAI-compatible API and can work with files in a configured workspace.
 
 > [!NOTE]
-> The Python package/import name is `Tinyagent`. The terminal interface is branded **SPROUT**.
+> The Python package and import name is `Tinyagent`; the terminal application is branded **SPROUT**.
 
 ---
 
-## ✨ Features
+## Features
 
 | | |
 | --- | --- |
-| 💬 **Interactive chat** | Terminal chat with an Ollama model |
-| 🔧 **Native tool calling** | Function calls through an OpenAI-compatible chat completions API |
-| 📂 **Workspace tools** | Read, search, list, and write files in your working directory |
-| 🐍 **Python execution** | Run Python code, gated behind an approval prompt |
-| 🧠 **Memory & planning** | Conversation memory and configurable ReAct planners |
-| 🎨 **Rich output** | Styled terminal display with `rich`, plain fallback without it |
+| 💬 **Interactive terminal chat** | Work with an Ollama model from a command-line interface |
+| 🔧 **Native tool calling** | Let the model request registered functions through an OpenAI-compatible chat completions API |
+| 📂 **Workspace tools** | Read, search, inspect, and manage workspace files |
+| 🧪 **Development tools** | Run pytest and lint Python code with Ruff |
+| 🌿 **Git tools** | Inspect repository status, diffs, history, and line attribution |
+| 🧠 **Agent building blocks** | Experiment with ReAct planning, memory strategies, and model clients |
+| 🪴 **Skills** | Load `SKILL.md` instructions as callable tools |
+| 🎨 **Terminal display** | Rich formatting when installed, with a plain display fallback |
 
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Requirements
 
@@ -53,7 +53,7 @@ SPROUT is an experimental terminal agent built to explore how language models, t
 
 ### Install
 
-From the repository root:
+Run these commands from the repository root.
 
 <details open>
 <summary><b>🪟 Windows (PowerShell)</b></summary>
@@ -77,34 +77,33 @@ python -m pip install -r requirements.txt
 
 </details>
 
-> [!TIP]
-> Rich formatting is optional. Install it with `python -m pip install rich`; otherwise, SPROUT uses its plain terminal display.
+Rich formatting is optional. Install it separately with `python -m pip install rich`; SPROUT uses a plain terminal display when Rich is unavailable.
 
 ### Run with Ollama
 
-Make sure Ollama is running, then download the default model and launch SPROUT from the repository root:
+Make sure Ollama is running, pull the default model, and launch SPROUT from the repository root:
 
 ```bash
 ollama pull gemma4:e4b
 python -m Tinyagent.cli
 ```
 
-To choose another installed model:
+Choose another installed model with `--model`:
 
 ```bash
 python -m Tinyagent.cli --model gemma3:4b
 ```
 
-### ☁️ Use a cloud-hosted model
+### Use an Ollama cloud model
 
-To use Ollama's cloud-hosted Gemma model, sign in and select the cloud model:
+Sign in to Ollama and verify that the cloud model is available:
 
 ```bash
 ollama signin
 ollama run gemma4:31b-cloud
 ```
 
-Then, in the repository root, launch SPROUT:
+Then, from the repository root, launch SPROUT:
 
 ```bash
 python -m Tinyagent.cli --model gemma4:31b-cloud
@@ -113,17 +112,15 @@ python -m Tinyagent.cli --model gemma4:31b-cloud
 > [!IMPORTANT]
 > Cloud inference requires an Ollama account and sends model requests to Ollama's cloud service.
 
----
-
-## ⚙️ Configuration
+## Configuration
 
 | Option | Default | Purpose |
 | --- | --- | --- |
-| `--model` | `gemma4:e4b` | Model name passed to the API |
+| `--model` | `gemma4:e4b` | Model name sent to the API |
 | `--api_base` | `http://localhost:11434/v1` | OpenAI-compatible API base URL |
 | `--api_key` | `no_key` | API key sent as a bearer token |
 
-For example, to set the model and API base explicitly:
+Example:
 
 ```bash
 python -m Tinyagent.cli \
@@ -131,16 +128,14 @@ python -m Tinyagent.cli \
   --api_base http://localhost:11434/v1
 ```
 
-The selected endpoint must support chat completions and tool calling.
+The configured endpoint must support chat completions and native tool calling.
 
 > [!WARNING]
-> Avoid putting sensitive API keys directly in shell commands, where they may be retained in terminal history.
+> Avoid passing sensitive API keys directly in shell commands, where they may be saved in terminal history.
 
----
+## Using the CLI
 
-## 💻 Using the CLI
-
-Enter a prompt at the terminal input. Available commands:
+Enter a prompt at the input line to start a task.
 
 | Command | Action |
 | --- | --- |
@@ -149,80 +144,98 @@ Enter a prompt at the terminal input. Available commands:
 | `/memory` | Display conversation messages |
 | `/model` | Display the selected model |
 | `/tools` | List registered tools |
+| `/skills` | List loaded skills |
 | `exit` or `quit` | Exit SPROUT |
 
-Press `Ctrl+C` to exit as well.
+You can also press `Ctrl+C` to exit.
 
----
+## Built-in Tools
 
-## 🧰 Built-in Tools
+The default CLI registers tools in these categories:
 
-The default CLI registers these tools:
+| Category | Tools |
+| --- | --- |
+| **Read and explore** | `read_file`, `read_lines`, `list_files`, `tree`, `find_files`, `search_file`, `search_code`, `python_outline`, `read_json`, `read_csv` |
+| **Write and manage files** | `write_file`, `edit_file`, `append_file`, `make_dir`, `delete_file`, `move_file` |
+| **Run checks** | `run_tests`, `run_linter`, `execute_python` |
+| **Git** | `git_status`, `git_diff`, `git_log`, `git_show`, `git_blame`, `git_add`, `git_commit` |
 
-| Tool | Category | Needs approval |
-| --- | --- | :---: |
-| `read_file`, `read_lines` | 📖 Read | |
-| `list_files`, `find_files`, `search_file` | 🔍 Explore | |
-| `write_file` | ✏️ Write | ✅ |
-| `execute_python` | 🐍 Execute | ✅ |
+File tools are scoped to the workspace passed to `create_native_code_tools()`. The default CLI uses the current working directory.
 
-File paths are resolved relative to the directory from which SPROUT is launched. SPROUT asks for confirmation before `write_file` and `execute_python` run.
+### Tool approvals
 
----
+SPROUT asks for confirmation before these tools run:
 
-## 🔄 How It Works
+- File changes: `write_file`, `edit_file`, `append_file`, `delete_file`, `move_file`
+- Code and tests: `execute_python`, `run_tests`
+- Git changes: `git_add`, `git_commit`
+
+`make_dir` currently creates directories without an approval prompt. Read-only tools such as `git_status`, `git_diff`, and `search_code` do not require approval.
+
+### Testing and linting
+
+`run_tests` invokes pytest. The repository currently has no automated tests, so pytest may report that no tests were collected until tests are added.
+
+`run_linter` uses Ruff when installed. If Ruff is unavailable, it falls back to Python syntax checks using the standard library. Ruff and pytest are listed in `requirements.txt`.
+
+Ask SPROUT to run the test suite or lint a file or directory. Tools that execute commands ask for approval first.
+
+## Skills
+
+At startup, the CLI loads `SKILL.md` files from subdirectories under `Tinyagent/skills/`. Use `/skills` to list the loaded skills. The model can activate a skill as a tool to receive its instructions.
+
+The included `file-analyzer` skill analyzes local files using the `read_file` tool. URL fetching is not currently supported.
+
+## How It Works
 
 ```mermaid
 flowchart LR
     U([You]) --> C[CLI]
     C --> A[Agent loop]
-    A --> L[LLM via Ollama]
-    L -- tool call --> T{Approval needed?}
-    T -- yes --> P[Ask you to confirm]
+    A --> L[LLM through Ollama]
+    L -- tool call --> T{Approval required?}
+    T -- yes --> P[Ask for confirmation]
     P --> X[Run tool]
     T -- no --> X
     X -- observation --> A
-    L -- final answer --> U
+    L -- final response --> U
 ```
 
-Each turn, SPROUT shows what the model is thinking, which tool it wants to call, and what the tool returned, until it reaches an answer.
+The agent sends the conversation and available tool schemas to the model. If the model requests a tool, SPROUT runs it, adds the result to the conversation, and asks the model for the next step. The loop ends when the model returns a final response or the configured step limit is reached.
 
----
+## Project Structure
 
-## 🗂️ Project Structure
-
-| File | Responsibility |
+| Path | Responsibility |
 | --- | --- |
-| `Tinyagent/cli.py` | CLI arguments, interactive loop, and slash commands |
+| `Tinyagent/cli.py` | CLI arguments, interactive loop, slash commands, and skill loading |
 | `Tinyagent/agent.py` | Agent orchestration loop |
-| `Tinyagent/llm.py` | LLM and embedding API clients, response and trajectory types |
-| `Tinyagent/planning.py` | ReAct planners, Plan-and-Solve, and reflection components |
-| `Tinyagent/tools.py` | Tool schemas, registration, execution, and skill-loading support |
-| `Tinyagent/toolbox.py` | Workspace-scoped file and Python tools |
+| `Tinyagent/llm.py` | LLM and embedding clients, response types, and trajectory records |
+| `Tinyagent/planning.py` | ReAct, native ReAct, Plan-and-Solve, and reflection components |
+| `Tinyagent/tools.py` | Tool schemas, registration, execution, and skill loading |
+| `Tinyagent/toolbox.py` | Workspace file, code, lint, test, and Git tools |
 | `Tinyagent/memory.py` | Conversation, trimming, summarization, multimodal, and retrieval memory |
-| `Tinyagent/display.py` | SPROUT terminal branding and display handlers |
+| `Tinyagent/display.py` | SPROUT branding and terminal display handlers |
 | `Tinyagent/mcp.py` | Experimental MCP client code |
 | `Tinyagent/skills/` | Skill instruction files |
+| `Tinyagent/assests/sprout.svg` | SPROUT logo used in this README |
 
----
-
-## 🛡️ Safety Notes
+## Safety Notes
 
 > [!CAUTION]
-> SPROUT can write files and execute Python code after user confirmation. Only run it in a workspace you trust, review tool requests before approving them, and don't expose the agent to untrusted prompts with approval enabled. **The approval prompt is a safeguard, not a sandbox.**
+> SPROUT can modify files, execute Python, run tests, stage changes, and create Git commits after user confirmation. Review each request before approving it. The approval prompt is a safeguard, not a sandbox.
 
----
+`execute_python` runs arbitrary Python code and is **not sandboxed** by the workspace path checks; code may access other files or resources available to your user account. Only run SPROUT in a workspace and environment you trust.
 
-## 🌱 Development Status
+## Development Status
 
 SPROUT is an educational and experimental project, not a hardened autonomous coding product.
 
-- The default CLI currently loads its built-in tools. Skill files and MCP support are not automatically connected to that CLI flow.
+- The default CLI loads built-in tools and skill files.
 - The repository does not currently include an automated test suite.
+- MCP support is experimental and is not connected to the default CLI flow.
+- `make_dir` currently does not require approval.
 
----
-
-## 📄 License
+## License
 
 SPROUT is distributed under the [GNU General Public License v3.0](LICENSE).
 
