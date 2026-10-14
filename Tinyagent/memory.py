@@ -71,3 +71,53 @@ Conversation:
 Output the updated summary only."""
             response = self.llm.generate([{"role": "user", "content": prompt}])
             self.messages = [{"role": "system", "content": response.content}]
+
+
+class MultimodalMemory(Memory):
+    """Simple memory module to store conversation history."""
+
+    def add(
+        self,
+        role: str,
+        content: str,
+        tool_call: dict = None,
+        image_data: str = None,
+    ):
+        """Add a message to memory."""
+        # Image
+        if image_data:
+            is_url = image_data.startswith(("http://", "https://"))
+            url = image_data if is_url else f"data:image/jpeg;base64,{image_data}"
+            content = [
+                {"type": "image_url", "image_url": {"url": url}},
+                {"type": "text", "text": content},
+            ]
+
+        # Main message
+        message = {"role": role, "content": content}
+
+        # Tool call
+        if tool_call:
+            message["tool_calls"] = [tool_call]
+
+        # Append message to memory
+        self.messages.append(message)
+
+
+class MultiModalMemory(Memory):
+    def add(
+        self,
+        role: str,
+        content: str,
+        tool_call: dict = None,
+        image_data: str = None,
+    ):
+        """Add a message to memory."""
+        if image_data:
+            is_url = image_data.startswith(("http://", "https://"))
+            url = image_data if is_url else f"data:image/jpeg;base64,{image_data}"
+            content = [
+                {"type": "image_url", "image_url": {"url": url}},
+                {"type": "text", "text": content},
+            ]
+        super().add(role, content, tool_call=tool_call)
