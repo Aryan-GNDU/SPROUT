@@ -1,7 +1,7 @@
 from Tinyagent.llm import Trajectory, LLM, Response
 from Tinyagent.memory import Memory
 from Tinyagent.tools import Tools
-from Tinyagent.planning import React
+from Tinyagent.planning import ReAct
 from Tinyagent.display import Display
 
 class TinyAgent:
@@ -12,7 +12,7 @@ class TinyAgent:
         llm: LLM,
         memory: Memory,
         tools: Tools,
-        planner: React,
+        planner: ReAct,
         display: Display,
     ):
         self.llm = llm

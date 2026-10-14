@@ -1,4 +1,4 @@
-from Tinyagent.llm import LLM
+from Tinyagent.llm import LLM, EmbeddingModel
 
 class Memory:
     """Simple memory module to store conversation history."""
@@ -23,6 +23,7 @@ class Memory:
         """Get all messages."""
         return self.messages
 
+
 class TrimmingMemory(Memory):
     """Memory that keeps only the last two user/assistant turns."""
 
@@ -38,6 +39,7 @@ class TrimmingMemory(Memory):
             message for message in self.messages if message["role"] != "system"
         ]
         self.messages = system + turns[-4:]
+
 
 class SummarizationMemory(Memory):
     """Memory that compresses past turns into a running summary via an LLM."""
@@ -71,6 +73,38 @@ Conversation:
 Output the updated summary only."""
             response = self.llm.generate([{"role": "user", "content": prompt}])
             self.messages = [{"role": "system", "content": response.content}]
+
+
+class LongTermMemory(Memory):
+    """Memory enhanced with RAG: augments user queries with retrieved documents."""
+
+    def __init__(self, embedding_model: EmbeddingModel, documents: list[str]):
+        super().__init__()
+        self.embedding_model = embedding_model
+        self.documents = documents
+        self.embeddings = [embedding_model.embed(doc) for doc in documents]
+
+    def add(self, role: str, content: str, **kwargs) -> None:
+        # Augment user queries with retrieved context before storing
+        if role == "user":
+            context = "\n".join(self.search(content))
+            content = f"""Context:
+{context}
+
+Question: {content}"""
+        super().add(role, content, **kwargs)
+
+    def search(self, query: str, k: int = 3) -> list[str]:
+        """Return the top-k documents most similar to the query."""
+        query_embedding = self.embedding_model.embed(query)
+        scores = [self._cosine(query_embedding, emb) for emb in self.embeddings]
+        ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+        return [self.documents[i] for i in ranked[:k]]
+
+    def _cosine(self, a: list[float], b: list[float]) -> float:
+        dot = sum(x * y for x, y in zip(a, b))
+        norm = (sum(x * x for x in a) ** 0.5) * (sum(x * x for x in b) ** 0.5)
+        return dot / norm
 
 
 class MultimodalMemory(Memory):

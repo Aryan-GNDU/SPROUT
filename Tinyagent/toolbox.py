@@ -3,7 +3,7 @@ import random
 import subprocess
 import sys
 from pathlib import Path
-from Tinyagent.toolbox import Skills
+from Tinyagent.tools import Skills
 
 def get_weather(location: str) -> str:
     temperature = random.randint(10, 30)

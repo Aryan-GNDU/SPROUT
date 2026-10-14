@@ -19,14 +19,14 @@ TYPE_MAP = {
 def tool_to_schema(function: Callable) -> dict:
     """Convert a Python function to an OpenAI-style tool schema."""
     signature = inspect.signature(function)
- 
+
     # Extract meatadata
     properties, required = {}, []
     for name, parameter in signature.parameters.items():
         properties[name] = {"type": TYPE_MAP.get(parameter.annotation, "string")}
         if parameter.default is inspect.Parameter.empty:
             required.append(name)
- 
+
     # Fill schema
     schema = {
         "type": "function",
@@ -40,10 +40,8 @@ def tool_to_schema(function: Callable) -> dict:
             },
         },
     }
- 
+
     return schema
-
-
 
 
 class Tools:
@@ -65,12 +63,6 @@ class Tools:
         self.registry[name] = {"function": func, "description": description}
 
     @property
-    def schemas(self) -> None:
-        """Used only for native tool-calling."""
-        return None
-
-    
-    @property
     def descriptions(self) -> str:
         """Get descriptions of all registered tools."""
         return "\n".join(
@@ -81,14 +73,14 @@ class Tools:
     @property
     def prompt(self) -> str:
         return f"""
-                # Tools
+# Tools
 
-                If needed, you can only use the following tools to assist you in completing tasks:
+If needed, you can only use the following tools to assist you in completing tasks:
 
-                {self.descriptions}
+{self.descriptions}
 
-                To use a tool, respond with JSON: {{"tool": "name", "kwargs": {{"param": "value"}}}}
-                """
+To use a tool, respond with JSON: {{"tool": "name", "kwargs": {{"param": "value"}}}}
+"""
 
     def parse(self, response: Response) -> Response:
         """Parse a JSON tool call from text."""
@@ -130,35 +122,45 @@ class Tools:
         return f"Tool '{name}' not found."
 
     def observation(self, result: str) -> tuple[str, str]:
-        """Native tool results use the 'tool' role."""
-        return "tool", str(result)
+        """Return the observation as a user."""
+        return "user", f"OBSERVATION: {result}"
 
     def is_done(self, response: Response) -> bool:
-        """No tool call means the `TinyAgent` is done."""
-        return not response.tool_call
+        """The `TinyAgent`'s stopping mechanism."""
+        if not response.tool_call:
+            return True
+        if response.tool_call["tool"] == "final_answer":
+            response.content = response.tool_call.get("kwargs", "")
+            return True
+        return False
+
+    @property
+    def schemas(self) -> None:
+        """Used only for native tool-calling."""
+        return None
 
 
 class NativeTools(Tools):
     """Tool registry using native function calling."""
- 
+
     @property
     def schemas(self) -> list[dict]:
         """Return tool functions for native function calling."""
         return [
             tool_to_schema(tool["function"]) for tool in self.registry.values()
         ]
- 
+
     @property
     def prompt(self) -> str:
         """Empty because we don't need a prompt for native tool calling"""
         return ""
- 
+
     def parse(self, response: Response) -> Response:
         """Parse a tool call."""
         # If there's no tool call, return the response as is
         if not response.tool_call:
             return response
- 
+
         # Extract the tool name and arguments from the tool call
         args = response.tool_call["function"]["arguments"]
         if isinstance(args, str):
@@ -167,18 +169,18 @@ class NativeTools(Tools):
             "tool": response.tool_call["function"]["name"],
             "kwargs": args,
         }
- 
+
         # Add the parsed tool call to the response
         return Response(
             content=response.content,
             reasoning=response.reasoning,
             tool_call=tool_call,
         )
- 
+
     def observation(self, result: str) -> tuple[str, str]:
         """Native tool results use the 'tool' role."""
         return "tool", str(result)
- 
+
     def is_done(self, response: Response) -> bool:
         """No tool call means the `TinyAgent` is done."""
         return not response.tool_call
