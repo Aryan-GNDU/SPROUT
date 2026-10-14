@@ -2,3 +2,5 @@ packaging==26.3
 setuptools==83.0.0
 wheel==0.47.0
 mcp[cli]
+pytest
+ruff==0.17.0
