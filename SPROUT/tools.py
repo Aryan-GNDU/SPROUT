@@ -1,6 +1,6 @@
 from typing import Callable, Any
 import json
-from Tinyagent.llm import Response
+from SPROUT.llm import Response
 import inspect
 from pathlib import Path
 
@@ -126,7 +126,7 @@ To use a tool, respond with JSON: {{"tool": "name", "kwargs": {{"param": "value"
         return "user", f"OBSERVATION: {result}"
 
     def is_done(self, response: Response) -> bool:
-        """The `TinyAgent`'s stopping mechanism."""
+        """The `SproutAgent`'s stopping mechanism."""
         if not response.tool_call:
             return True
         if response.tool_call["tool"] == "final_answer":
@@ -182,7 +182,7 @@ class NativeTools(Tools):
         return "tool", str(result)
 
     def is_done(self, response: Response) -> bool:
-        """No tool call means the `TinyAgent` is done."""
+        """No tool call means the `SproutAgent` is done."""
         return not response.tool_call
 
 

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Tinyagent.llm import Response
+from SPROUT.llm import Response
 
 
 @dataclass

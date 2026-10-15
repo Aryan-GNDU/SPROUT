@@ -1,4 +1,4 @@
-from Tinyagent.llm import LLM, EmbeddingModel
+from SPROUT.llm import LLM, EmbeddingModel
 
 class Memory:
     """Simple memory module to store conversation history."""

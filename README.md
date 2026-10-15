@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="Tinyagent/assests/sprout.svg" alt="SPROUT seedling logo" width="220">
+<img src="SPROUT/assests/sprout.svg" alt="SPROUT seedling logo" width="220">
 
 # S P R O U T
 
@@ -26,7 +26,7 @@
 SPROUT is an experimental terminal agent for exploring how language models, tool calling, memory, and planning fit together. It connects to Ollama's OpenAI-compatible API and can work with files in a configured workspace.
 
 > [!NOTE]
-> The Python package and import name is `Tinyagent`; the terminal application is branded **SPROUT**.
+> The Python package and import name is `SPROUT`; the terminal application is branded **SPROUT**.
 
 ---
 
@@ -85,13 +85,13 @@ Make sure Ollama is running, pull the default model, and launch SPROUT from the 
 
 ```bash
 ollama pull gemma4:e4b
-python -m Tinyagent.cli
+python -m SPROUT.cli
 ```
 
 Choose another installed model with `--model`:
 
 ```bash
-python -m Tinyagent.cli --model gemma3:4b
+python -m SPROUT.cli --model gemma3:4b
 ```
 
 ### Use an Ollama cloud model
@@ -106,7 +106,7 @@ ollama run gemma4:31b-cloud
 Then, from the repository root, launch SPROUT:
 
 ```bash
-python -m Tinyagent.cli --model gemma4:31b-cloud
+python -m SPROUT.cli --model gemma4:31b-cloud
 ```
 
 > [!IMPORTANT]
@@ -123,7 +123,7 @@ python -m Tinyagent.cli --model gemma4:31b-cloud
 Example:
 
 ```bash
-python -m Tinyagent.cli \
+python -m SPROUT.cli \
   --model gemma4:31b-cloud \
   --api_base http://localhost:11434/v1
 ```
@@ -182,7 +182,7 @@ Ask SPROUT to run the test suite or lint a file or directory. Tools that execute
 
 ## Skills
 
-At startup, the CLI loads `SKILL.md` files from subdirectories under `Tinyagent/skills/`. Use `/skills` to list the loaded skills. The model can activate a skill as a tool to receive its instructions.
+At startup, the CLI loads `SKILL.md` files from subdirectories under `SPROUT/skills/`. Use `/skills` to list the loaded skills. The model can activate a skill as a tool to receive its instructions.
 
 The included `file-analyzer` skill analyzes local files using the `read_file` tool. URL fetching is not currently supported.
 
@@ -207,17 +207,17 @@ The agent sends the conversation and available tool schemas to the model. If the
 
 | Path | Responsibility |
 | --- | --- |
-| `Tinyagent/cli.py` | CLI arguments, interactive loop, slash commands, and skill loading |
-| `Tinyagent/agent.py` | Agent orchestration loop |
-| `Tinyagent/llm.py` | LLM and embedding clients, response types, and trajectory records |
-| `Tinyagent/planning.py` | ReAct, native ReAct, Plan-and-Solve, and reflection components |
-| `Tinyagent/tools.py` | Tool schemas, registration, execution, and skill loading |
-| `Tinyagent/toolbox.py` | Workspace file, code, lint, test, and Git tools |
-| `Tinyagent/memory.py` | Conversation, trimming, summarization, multimodal, and retrieval memory |
-| `Tinyagent/display.py` | SPROUT branding and terminal display handlers |
-| `Tinyagent/mcp.py` | Experimental MCP client code |
-| `Tinyagent/skills/` | Skill instruction files |
-| `Tinyagent/assests/sprout.svg` | SPROUT logo used in this README |
+| `SPROUT/cli.py` | CLI arguments, interactive loop, slash commands, and skill loading |
+| `SPROUT/agent.py` | Agent orchestration loop |
+| `SPROUT/llm.py` | LLM and embedding clients, response types, and trajectory records |
+| `SPROUT/planning.py` | ReAct, native ReAct, Plan-and-Solve, and reflection components |
+| `SPROUT/tools.py` | Tool schemas, registration, execution, and skill loading |
+| `SPROUT/toolbox.py` | Workspace file, code, lint, test, and Git tools |
+| `SPROUT/memory.py` | Conversation, trimming, summarization, multimodal, and retrieval memory |
+| `SPROUT/display.py` | SPROUT branding and terminal display handlers |
+| `SPROUT/mcp.py` | Experimental MCP client code |
+| `SPROUT/skills/` | Skill instruction files |
+| `SPROUT/assests/sprout.svg` | SPROUT logo used in this README |
 
 ## Safety Notes
 

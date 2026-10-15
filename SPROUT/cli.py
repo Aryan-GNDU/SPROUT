@@ -1,17 +1,17 @@
 import argparse
 import re
 from pathlib import Path
-from Tinyagent.agent import LLM, TinyAgent
-from Tinyagent.planning import NativeReAct
-from Tinyagent.memory import MultimodalMemory
-from Tinyagent.display import (
+from SPROUT.agent import LLM, SproutAgent
+from SPROUT.planning import NativeReAct
+from SPROUT.memory import MultimodalMemory
+from SPROUT.display import (
     label,
     Display,
     RichDisplay,
     LOGO,
     FLAMINGO_LOGO,
 )
-from Tinyagent.toolbox import create_native_code_tools
+from SPROUT.toolbox import create_native_code_tools
 
 # --- Detect rich; fall back to a plain console if missing ---
 
@@ -169,7 +169,7 @@ def main():
     planner = NativeReAct(max_steps=10)
 
     # Coding Agent
-    agent = TinyAgent(
+    agent = SproutAgent(
         llm=llm,
         memory=MultimodalMemory(),
         tools=tools,
