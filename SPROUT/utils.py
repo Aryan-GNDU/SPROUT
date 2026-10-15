@@ -164,7 +164,7 @@ class ChapterOverview:
     def __repr__(self):
         if not HAS_NOTEBOOK_DEPS:
             return f"{type(self).__name__}: install `rich` to render."
-        tree = Tree("[bold]TinyAgent[/]")
+        tree = Tree("[bold]SproutAgent[/]")
         max_len = max(len(m[0]) for m in self.modules)
 
         for name, status, desc in self.modules:
@@ -286,8 +286,8 @@ class ComparisonViewer(Renderable):
 
     Usage:
         ComparisonViewer([
-            ("Prompt-based", ch5.TinyAgent._execute_action),
-            ("Native",       ch5_native.TinyAgent._execute_action),
+            ("Prompt-based", ch5.SproutAgent._execute_action),
+            ("Native",       ch5_native.SproutAgent._execute_action),
         ])
     """
 
@@ -332,9 +332,9 @@ class EvolutionViewer(Renderable):
 
     Usage:
         EvolutionViewer([
-            ("Chapter 1", ch1.TinyAgent._step),
-            ("Chapter 4", ch4.TinyAgent._step),
-            ("Chapter 5", ch5.TinyAgent._step),
+            ("Chapter 1", ch1.SproutAgent._step),
+            ("Chapter 4", ch4.SproutAgent._step),
+            ("Chapter 5", ch5.SproutAgent._step),
         ])
     """
 

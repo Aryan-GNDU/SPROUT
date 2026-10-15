@@ -5,11 +5,12 @@ description: Analyze files and provide structured summaries
 
 # File Analyzer Skill
 
-When asked to analyze a file or URL, follow these steps:
+When asked to analyze a local file, follow these steps:
 
 ## Step 1: Read the Content
 
-Use the `read_markdown` tool to fetch the file content from the provided path or URL.
+For a local file, use the `read_file` tool with its workspace-relative path.
+If the user provides a URL, explain that URL fetching is not supported yet.
 
 ## Step 2: Analyze the Structure
 

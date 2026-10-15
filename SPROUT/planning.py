@@ -1,7 +1,7 @@
 import re
-from Tinyagent.llm import Response, LLM
-from Tinyagent.memory import Memory
-from Tinyagent.tools import Tools
+from SPROUT.llm import Response, LLM
+from SPROUT.memory import Memory
+from SPROUT.tools import Tools
 
 
 class ReAct:

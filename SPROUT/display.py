@@ -8,7 +8,7 @@ import re
 import time
 import threading
 
-from Tinyagent.llm import Response
+from SPROUT.llm import Response
 
 
 # --- ANSI escape codes (used by the pure-Python Display) ---

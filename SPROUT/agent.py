@@ -1,10 +1,10 @@
-from Tinyagent.llm import Trajectory, LLM, Response
-from Tinyagent.memory import Memory
-from Tinyagent.tools import Tools
-from Tinyagent.planning import ReAct
-from Tinyagent.display import Display
+from SPROUT.llm import Trajectory, LLM, Response
+from SPROUT.memory import Memory
+from SPROUT.tools import Tools
+from SPROUT.planning import ReAct
+from SPROUT.display import Display
 
-class TinyAgent:
+class SproutAgent:
     """A minimal, modular, and educational agent framework."""
 
     def __init__(
