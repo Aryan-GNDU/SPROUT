@@ -627,6 +627,7 @@ _APPROVAL_REQUIRED = {
     "append_file",
     "delete_file",
     "move_file",
+    "make_dir",
     "run_tests",
     "git_add",
     "git_commit",
