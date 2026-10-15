@@ -1,8 +1,9 @@
-from SPROUT.llm import Trajectory, LLM, Response
+from SPROUT.llm import LLM, Response
 from SPROUT.memory import Memory
 from SPROUT.tools import Tools
 from SPROUT.planning import ReAct
 from SPROUT.display import Display
+from SPROUT.trajectory import Trajectory
 
 class SproutAgent:
     """A minimal, modular, and educational agent framework."""
@@ -32,7 +33,7 @@ class SproutAgent:
     def run(self, task: str, image_data: str = None) -> str:
         """Run the agent on a task."""
         self.memory.add("user", task, image_data=image_data)
-        self.trajectory.initialize(task)
+        self.trajectory.new_run(task)
 
         # *Autonomy* loop
         for step in range(self.planner.max_steps):
@@ -60,7 +61,7 @@ class SproutAgent:
 
         # ANSWER: Stopping mechanism
         if self.tools.is_done(response):
-            self.trajectory.add(response)
+            self.trajectory.add_step(response)
             return response.content
 
         return self._execute_action(response)
@@ -75,7 +76,7 @@ class SproutAgent:
         # OBSERVATION: add tool results to memory and display
         role, observation = self.tools.observation(result)
         self.memory.add(role, observation)
-        self.trajectory.add(response, observation)
+        self.trajectory.add_step(response, observation)
         self.display("observation", observation)
 
         return None
