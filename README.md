@@ -13,17 +13,18 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Ollama](https://img.shields.io/badge/runs%20on-Ollama-34c759?style=for-the-badge)
 ![Native Tool Calling](https://img.shields.io/badge/native-tool%20calling-1b7f3b?style=for-the-badge)
+![SQLite Memory](https://img.shields.io/badge/persistent%20memory-SQLite-003B57?style=for-the-badge)
 ![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue?style=for-the-badge)
 
 <br>
 
-[Features](#features) · [Quick Start](#quick-start) · [Configuration](#configuration) · [CLI](#using-the-cli) · [Tools](#built-in-tools) · [Architecture](#how-it-works) · [Safety](#safety-notes)
+[Features](#features) · [Quick Start](#quick-start) · [Configuration](#configuration) · [CLI](#using-the-cli) · [Tools](#built-in-tools) · [Memory](#memory) · [Architecture](#how-it-works) · [Safety](#safety-notes)
 
 </div>
 
 <br>
 
-SPROUT is an experimental terminal agent for exploring how language models, tool calling, memory, and planning fit together. It connects to Ollama's OpenAI-compatible API and can work with files in a configured workspace.
+SPROUT is an experimental terminal agent for exploring how language models, tool calling, planning, and memory fit together. It connects to Ollama’s OpenAI-compatible API and provides tools for working with files and Git repositories.
 
 > [!NOTE]
 > The Python package and import name is `SPROUT`; the terminal application is branded **SPROUT**.
@@ -39,7 +40,8 @@ SPROUT is an experimental terminal agent for exploring how language models, tool
 | 📂 **Workspace tools** | Read, search, inspect, and manage workspace files |
 | 🧪 **Development tools** | Run pytest and lint Python code with Ruff |
 | 🌿 **Git tools** | Inspect repository status, diffs, history, and line attribution |
-| 🧠 **Agent building blocks** | Experiment with ReAct planning, memory strategies, and model clients |
+| 🧠 **Conversation memory** | Preserve recent context and summarize older turns |
+| 💾 **Persistent fact memory** | Store, retrieve, and forget approved facts using SQLite |
 | 🪴 **Skills** | Load `SKILL.md` instructions as callable tools |
 | 🎨 **Terminal display** | Rich formatting when installed, with a plain display fallback |
 
@@ -81,20 +83,21 @@ Rich formatting is optional. Install it separately with `python -m pip install r
 
 ### Run with Ollama
 
-Make sure Ollama is running, pull the default model, and launch SPROUT from the repository root:
+Pull the default chat model and the embedding model used for persistent memory, then launch SPROUT from the repository root:
 
 ```bash
 ollama pull gemma4:e4b
+ollama pull embeddinggemma
 python -m SPROUT.cli
 ```
 
-Choose another installed model with `--model`:
+Choose another installed chat model with `--model`:
 
 ```bash
 python -m SPROUT.cli --model gemma3:4b
 ```
 
-### Use an Ollama cloud model
+### Use an Ollama cloud chat model
 
 Sign in to Ollama and verify that the cloud model is available:
 
@@ -110,13 +113,13 @@ python -m SPROUT.cli --model gemma4:31b-cloud
 ```
 
 > [!IMPORTANT]
-> Cloud inference requires an Ollama account and sends model requests to Ollama's cloud service.
+> Cloud chat inference requires an Ollama account and sends chat requests to Ollama’s cloud service. Persistent memory still uses the configured Ollama API endpoint for embeddings.
 
 ## Configuration
 
 | Option | Default | Purpose |
 | --- | --- | --- |
-| `--model` | `gemma4:e4b` | Model name sent to the API |
+| `--model` | `gemma4:e4b` | Chat model name sent to the API |
 | `--api_base` | `http://localhost:11434/v1` | OpenAI-compatible API base URL |
 | `--api_key` | `no_key` | API key sent as a bearer token |
 
@@ -128,7 +131,7 @@ python -m SPROUT.cli \
   --api_base http://localhost:11434/v1
 ```
 
-The configured endpoint must support chat completions and native tool calling.
+The configured API must support chat completions and native tool calling. Persistent memory also uses the configured endpoint’s embeddings API with the `embeddinggemma` model.
 
 > [!WARNING]
 > Avoid passing sensitive API keys directly in shell commands, where they may be saved in terminal history.
@@ -140,9 +143,9 @@ Enter a prompt at the input line to start a task.
 | Command | Action |
 | --- | --- |
 | `/help` | Show available commands |
-| `/clear` | Clear conversation history while keeping the system prompt |
-| `/memory` | Display conversation messages |
-| `/model` | Display the selected model |
+| `/clear` | Clear conversation history and summary while keeping the system prompt |
+| `/memory` | Display current conversation messages |
+| `/model` | Display the selected chat model |
 | `/tools` | List registered tools |
 | `/skills` | List loaded skills |
 | `exit` or `quit` | Exit SPROUT |
@@ -159,30 +162,48 @@ The default CLI registers tools in these categories:
 | **Write and manage files** | `write_file`, `edit_file`, `append_file`, `make_dir`, `delete_file`, `move_file` |
 | **Run checks** | `run_tests`, `run_linter`, `execute_python` |
 | **Git** | `git_status`, `git_diff`, `git_log`, `git_show`, `git_blame`, `git_add`, `git_commit` |
+| **Persistent memory** | `remember_fact`, `forget_fact` |
 
-File tools are scoped to the workspace passed to `create_native_code_tools()`. The default CLI uses the current working directory.
+File tools are scoped to the workspace passed to `create_native_code_tools()`. The CLI uses the current working directory.
 
 ### Tool approvals
 
 SPROUT asks for confirmation before these tools run:
 
-- File changes: `write_file`, `edit_file`, `append_file`, `delete_file`, `move_file`
+- File changes: `write_file`, `edit_file`, `append_file`, `delete_file`, `move_file`, `make_dir`
 - Code and tests: `execute_python`, `run_tests`
 - Git changes: `git_add`, `git_commit`
+- Persistent memory changes: `remember_fact`, `forget_fact`
 
-`make_dir` currently creates directories without an approval prompt. Read-only tools such as `git_status`, `git_diff`, and `search_code` do not require approval.
+Read-only tools such as `git_status`, `git_diff`, and `search_code` do not require approval.
 
 ### Testing and linting
 
-`run_tests` invokes pytest. The repository currently has no automated tests, so pytest may report that no tests were collected until tests are added.
+Run the test suite from the repository root:
+
+```bash
+python -m pytest -q
+```
 
 `run_linter` uses Ruff when installed. If Ruff is unavailable, it falls back to Python syntax checks using the standard library. Ruff and pytest are listed in `requirements.txt`.
 
-Ask SPROUT to run the test suite or lint a file or directory. Tools that execute commands ask for approval first.
+## Memory
+
+SPROUT uses two separate forms of memory:
+
+- **Conversation memory** is held in process memory. `SummarizationMemory` keeps system instructions and recent turns while summarizing older turns. It is cleared when SPROUT exits.
+- **Persistent fact memory** stores explicitly approved facts and their embeddings in `sprout_memory.sqlite3` at the repository root. SPROUT searches for up to three relevant facts when a task begins.
+
+Ask SPROUT to remember a fact, then approve the `remember_fact` tool call. To remove one, ask it to forget the exact saved text and approve `forget_fact`. `/clear` clears only conversation memory; it does not erase facts in SQLite.
+
+To erase all persistent facts, exit SPROUT and delete `sprout_memory.sqlite3`. The database is gitignored, but it is not encrypted.
+
+> [!NOTE]
+> Retrieval currently returns the nearest matches without a relevance threshold. Review what you save, and don’t store passwords, API keys, or other secrets.
 
 ## Skills
 
-At startup, the CLI loads `SKILL.md` files from subdirectories under `SPROUT/skills/`. Use `/skills` to list the loaded skills. The model can activate a skill as a tool to receive its instructions.
+At startup, the CLI loads `SKILL.md` files from subdirectories under `SPROUT/skills/`. Use `/skills` to list loaded skills. The model can activate a skill as a tool to receive its instructions.
 
 The included `file-analyzer` skill analyzes local files using the `read_file` tool. URL fetching is not currently supported.
 
@@ -192,7 +213,8 @@ The included `file-analyzer` skill analyzes local files using the `read_file` to
 flowchart LR
     U([You]) --> C[CLI]
     C --> A[Agent loop]
-    A --> L[LLM through Ollama]
+    A --> R[Retrieve relevant facts]
+    R --> L[LLM through Ollama]
     L -- tool call --> T{Approval required?}
     T -- yes --> P[Ask for confirmation]
     P --> X[Run tool]
@@ -201,32 +223,33 @@ flowchart LR
     L -- final response --> U
 ```
 
-The agent sends the conversation and available tool schemas to the model. If the model requests a tool, SPROUT runs it, adds the result to the conversation, and asks the model for the next step. The loop ends when the model returns a final response or the configured step limit is reached.
+For each task, the agent searches persistent memory and adds retrieved material to the model request without saving it as conversation history. The agent then follows the model’s native tool calls, adds tool results to conversation memory, and continues until it reaches a final answer or the step limit.
 
 ## Project Structure
 
 | Path | Responsibility |
 | --- | --- |
 | `SPROUT/cli.py` | CLI arguments, interactive loop, slash commands, and skill loading |
-| `SPROUT/core/agent.py` | Agent orchestration loop |
+| `SPROUT/core/agent.py` | Agent orchestration and optional retrieval context |
 | `SPROUT/core/llm.py` | LLM and embedding clients and response types |
 | `SPROUT/core/planning.py` | ReAct, native ReAct, Plan-and-Solve, and reflection components |
 | `SPROUT/core/trajectory.py` | Agent run and step records |
 | `SPROUT/memory/conversation.py` | Conversation, trimming, summarization, and multimodal memory |
 | `SPROUT/memory/retrieval.py` | SQLite-backed document retrieval |
 | `SPROUT/tools/registry.py` | Tool schemas, registration, execution, and skill loading |
-| `SPROUT/tools/workspace.py` | Workspace file, code, lint, test, and Git tools |
+| `SPROUT/tools/workspace.py` | Workspace, development, Git, and memory tools |
 | `SPROUT/integrations/mcp.py` | Experimental MCP client code |
-| `SPROUT/ui/display.py` | SPROUT branding and terminal display handlers |
+| `SPROUT/ui/display.py` | SPROUT terminal display |
 | `SPROUT/dev/notebook_views.py` | Notebook-oriented code and trajectory viewers |
 | `SPROUT/dev/legacy_display.py` | Retained legacy terminal display implementation |
 | `SPROUT/skills/` | Skill instruction files |
 | `SPROUT/assets/sprout.svg` | SPROUT logo used in this README |
+| `tests/` | Unit and integration tests |
 
 ## Safety Notes
 
 > [!CAUTION]
-> SPROUT can modify files, execute Python, run tests, stage changes, and create Git commits after user confirmation. Review each request before approving it. The approval prompt is a safeguard, not a sandbox.
+> SPROUT can modify files, execute Python, run tests, stage changes, commit changes, and alter persistent memory after user confirmation. Review every request before approving it. The approval prompt is a safeguard, not a sandbox.
 
 `execute_python` runs arbitrary Python code and is **not sandboxed** by the workspace path checks; code may access other files or resources available to your user account. Only run SPROUT in a workspace and environment you trust.
 
@@ -235,9 +258,10 @@ The agent sends the conversation and available tool schemas to the model. If the
 SPROUT is an educational and experimental project, not a hardened autonomous coding product.
 
 - The default CLI loads built-in tools and skill files.
-- The repository does not currently include an automated test suite.
+- Persistent memory stores explicitly saved facts in local SQLite; it does not automatically index workspace files.
+- Retrieval uses the nearest matches without a relevance threshold.
 - MCP support is experimental and is not connected to the default CLI flow.
-- `make_dir` currently does not require approval.
+- The repository includes pytest coverage for memory summarization, retrieval, agent context, and approval-gated memory tools.
 
 ## License
 
