@@ -2,10 +2,11 @@ import argparse
 import re
 from pathlib import Path
 from SPROUT.core.agent import SproutAgent
-from SPROUT.core.llm import LLM
+from SPROUT.core.llm import  EmbeddingModel, LLM
 from SPROUT.core.planning import NativeReAct
-from SPROUT.memory.conversation import MultimodalMemory
 from SPROUT.tools.workspace import create_native_code_tools
+from SPROUT.memory.conversation import SummarizationMemory
+from SPROUT.memory.retrieval import DocumentRetriever
 from SPROUT.ui.display import (
     label,
     Display,
@@ -76,7 +77,7 @@ def handle_command(cmd, agent):
 
     # `/clear` command clears memory except system prompt
     elif cmd == "/clear":
-        agent.memory.messages = agent.memory.messages[:1]
+        agent.memory.clear()
         console.print("  [dim]Memory cleared (system prompt kept).[/]")
 
     # `/memory` command shows current conversation memory
@@ -159,8 +160,18 @@ def main():
         think=True,
     )
 
+    retriever = DocumentRetriever(
+        embedding_model=EmbeddingModel(
+            model="embeddinggemma",
+            base_url=args.api_base,
+        ),
+        db_path=str(
+            Path(__file__).resolve().parents[1] / "sprout_memory.sqlite3"
+        ),
+    )
+
     # Tools and Skills
-    tools = create_native_code_tools()
+    tools = create_native_code_tools(retriever=retriever)
 
     skill_dir = Path(__file__).parent / "skills"
     for skill_file in sorted(skill_dir.glob("*/SKILL.md")):
@@ -172,10 +183,11 @@ def main():
     # Coding Agent
     agent = SproutAgent(
         llm=llm,
-        memory=MultimodalMemory(),
+        memory=SummarizationMemory(llm),
         tools=tools,
         planner=planner,
         display=display,
+        retriever=retriever,
     )
 
     # Display welcome message with model, tools, and skills

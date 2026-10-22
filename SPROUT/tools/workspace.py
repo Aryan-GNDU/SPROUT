@@ -8,6 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 from SPROUT.tools.registry import Skills
+from SPROUT.memory.retrieval import DocumentRetriever
 
 def get_weather(location: str) -> str:
     temperature = random.randint(10, 30)
@@ -634,9 +635,44 @@ _APPROVAL_REQUIRED = {
 }
 
 
-def create_native_code_tools(workspace: str = ".") -> Skills:
+def create_native_code_tools(workspace: str = ".",
+                              retriever: DocumentRetriever | None = None,
+                              ) -> Skills:
     """Create coding tools with native function calling (schemas auto-generated)."""
     tools = Skills(requires_approval=set(_APPROVAL_REQUIRED))
     for name, (func, desc) in _build_code_tools(workspace).items():
         tools.add_tool(name, func, desc)
+    if retriever is not None:
+        def forget_fact(fact: str) -> str:
+            """Delete a saved fact by its exact text."""
+            fact = fact.strip()
+            if not fact:
+                return "No fact provided."
+
+            deleted = retriever.delete_document(fact)
+            if deleted == 0:
+                return "No exact matching saved fact found."
+            return f"Deleted {deleted} matching saved fact(s)."
+
+        tools.add_tool(
+            "forget_fact",
+            forget_fact,
+            "Delete a saved fact using its exact stored text.",
+        )
+        tools.requires_approval.add("forget_fact")
+
+        def remember_fact(fact: str) -> str:
+            """Save a user-approved fact to persistent memory."""
+            fact = fact.strip()
+            if not fact:
+                return "Nothing to save."
+            retriever.add_document(fact)
+            return "Saved that fact to persistent memory."
+
+        tools.add_tool(
+            "remember_fact",
+            remember_fact,
+            "Save a fact the user explicitly asked SPROUT to remember.",
+        )
+        tools.requires_approval.add("remember_fact")
     return tools

@@ -16,3 +16,15 @@ def test_new_retriever_reads_saved_document(tmp_path):
     second = DocumentRetriever(FakeEmbeddingModel(), database)
 
     assert second.search("memory record", limit=1) == [document]
+
+
+def test_delete_document_removes_saved_document(tmp_path):
+    database = str(tmp_path / "retrieval.sqlite3")
+    document = "A saved memory record."
+    retriever = DocumentRetriever(FakeEmbeddingModel(), database)
+    retriever.add_document(document)
+
+    assert retriever.delete_document(document) == 1
+
+    reopened = DocumentRetriever(FakeEmbeddingModel(), database)
+    assert reopened.search("memory record") == []

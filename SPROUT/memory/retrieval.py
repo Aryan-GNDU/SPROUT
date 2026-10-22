@@ -55,6 +55,20 @@ class DocumentRetriever:
         ranked.sort(key=lambda item: item[0], reverse=True)
         return [text for _, text in ranked[:limit]]
 
+    def delete_document(self, text: str) -> int:
+        """Delete all documents whose text exactly matches; return count."""
+        if not text.strip():
+            return 0
+
+        with closing(sqlite3.connect(self.db_path)) as connection:
+            cursor = connection.execute(
+                "DELETE FROM documents WHERE text = ?",
+                (text,),
+            )
+            connection.commit()
+            return cursor.rowcount
+        
+
     @staticmethod
     def _cosine(left: list[float], right: list[float]) -> float:
         dot = sum(a * b for a, b in zip(left, right))
