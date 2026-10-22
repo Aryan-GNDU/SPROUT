@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="SPROUT/assests/sprout.svg" alt="SPROUT seedling logo" width="220">
+<img src="SPROUT/assets/sprout.svg" alt="SPROUT seedling logo" width="220">
 
 # S P R O U T
 
@@ -208,16 +208,20 @@ The agent sends the conversation and available tool schemas to the model. If the
 | Path | Responsibility |
 | --- | --- |
 | `SPROUT/cli.py` | CLI arguments, interactive loop, slash commands, and skill loading |
-| `SPROUT/agent.py` | Agent orchestration loop |
-| `SPROUT/llm.py` | LLM and embedding clients, response types, and trajectory records |
-| `SPROUT/planning.py` | ReAct, native ReAct, Plan-and-Solve, and reflection components |
-| `SPROUT/tools.py` | Tool schemas, registration, execution, and skill loading |
-| `SPROUT/toolbox.py` | Workspace file, code, lint, test, and Git tools |
-| `SPROUT/memory.py` | Conversation, trimming, summarization, multimodal, and retrieval memory |
-| `SPROUT/display.py` | SPROUT branding and terminal display handlers |
-| `SPROUT/mcp.py` | Experimental MCP client code |
+| `SPROUT/core/agent.py` | Agent orchestration loop |
+| `SPROUT/core/llm.py` | LLM and embedding clients and response types |
+| `SPROUT/core/planning.py` | ReAct, native ReAct, Plan-and-Solve, and reflection components |
+| `SPROUT/core/trajectory.py` | Agent run and step records |
+| `SPROUT/memory/conversation.py` | Conversation, trimming, summarization, and multimodal memory |
+| `SPROUT/memory/retrieval.py` | SQLite-backed document retrieval |
+| `SPROUT/tools/registry.py` | Tool schemas, registration, execution, and skill loading |
+| `SPROUT/tools/workspace.py` | Workspace file, code, lint, test, and Git tools |
+| `SPROUT/integrations/mcp.py` | Experimental MCP client code |
+| `SPROUT/ui/display.py` | SPROUT branding and terminal display handlers |
+| `SPROUT/dev/notebook_views.py` | Notebook-oriented code and trajectory viewers |
+| `SPROUT/dev/legacy_display.py` | Retained legacy terminal display implementation |
 | `SPROUT/skills/` | Skill instruction files |
-| `SPROUT/assests/sprout.svg` | SPROUT logo used in this README |
+| `SPROUT/assets/sprout.svg` | SPROUT logo used in this README |
 
 ## Safety Notes
 

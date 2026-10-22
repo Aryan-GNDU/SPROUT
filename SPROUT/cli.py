@@ -1,17 +1,18 @@
 import argparse
 import re
 from pathlib import Path
-from SPROUT.agent import LLM, SproutAgent
-from SPROUT.planning import NativeReAct
-from SPROUT.memory import MultimodalMemory
-from SPROUT.display import (
+from SPROUT.core.agent import SproutAgent
+from SPROUT.core.llm import LLM
+from SPROUT.core.planning import NativeReAct
+from SPROUT.memory.conversation import MultimodalMemory
+from SPROUT.tools.workspace import create_native_code_tools
+from SPROUT.ui.display import (
     label,
     Display,
     RichDisplay,
     LOGO,
     FLAMINGO_LOGO,
 )
-from SPROUT.toolbox import create_native_code_tools
 
 # --- Detect rich; fall back to a plain console if missing ---
 

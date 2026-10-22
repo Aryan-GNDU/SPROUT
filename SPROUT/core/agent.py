@@ -1,9 +1,9 @@
-from SPROUT.llm import LLM, Response
-from SPROUT.memory import Memory
-from SPROUT.tools import Tools
-from SPROUT.planning import ReAct
-from SPROUT.display import Display
-from SPROUT.trajectory import Trajectory
+from SPROUT.core.llm import LLM, Response
+from SPROUT.core.planning import ReAct
+from SPROUT.core.trajectory import Trajectory
+from SPROUT.memory.conversation import Memory
+from SPROUT.tools.registry import Tools
+from SPROUT.ui.display import Display
 
 class SproutAgent:
     """A minimal, modular, and educational agent framework."""

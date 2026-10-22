@@ -4,7 +4,7 @@ import asyncio
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from SPROUT.tools import Tools
+from SPROUT.tools.registry import Tools
 
 
 class MCPTools(Tools):

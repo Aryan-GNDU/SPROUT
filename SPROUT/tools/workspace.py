@@ -7,7 +7,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from SPROUT.tools import Skills
+from SPROUT.tools.registry import Skills
 
 def get_weather(location: str) -> str:
     temperature = random.randint(10, 30)
