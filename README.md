@@ -4,7 +4,7 @@
 
 # S P R O U T
 
-**A small, tool-using agent development harness**
+**A lightweight, modular harness for building and running terminal-based AI agents**
 
 *Where agents begin to grow.*
 
@@ -24,7 +24,7 @@
 
 <br>
 
-SPROUT is an experimental terminal agent for exploring how language models, tool calling, planning, and memory fit together. It connects to Ollama’s OpenAI-compatible API and provides tools for working with files and Git repositories.
+Its runnable CLI demonstrates native tool calling, conversation summarization, SQLite-backed fact memory, and workspace tools, using Ollama’s OpenAI-compatible API. It can also work with files and Git repositories.
 
 > [!NOTE]
 > The Python package and import name is `SPROUT`; the terminal application is branded **SPROUT**.
@@ -262,6 +262,10 @@ SPROUT is an educational and experimental project, not a hardened autonomous cod
 - Retrieval uses the nearest matches without a relevance threshold.
 - MCP support is experimental and is not connected to the default CLI flow.
 - The repository includes pytest coverage for memory summarization, retrieval, agent context, and approval-gated memory tools.
+
+## Acknowledgements
+
+SPROUT began as a learning project based on *An Illustrated Guide to AI Agents* by Maarten Grootendorst and Jay Alammar, published by O’Reilly. It has since been reorganized and extended into this modular project.
 
 ## License
 
