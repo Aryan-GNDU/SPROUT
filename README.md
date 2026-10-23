@@ -224,6 +224,21 @@ flowchart LR
 
 For each task, the agent searches persistent memory and adds retrieved material to the model request without saving it as conversation history. The agent then follows the model’s native tool calls, adds tool results to conversation memory, and continues until it reaches a final answer or the step limit.
 
+
+## Extension Points
+
+`SproutAgent` accepts replaceable components that follow these interfaces:
+
+- **LLM:** implement `generate(messages, tools=None)` and return a `Response`.
+- **Conversation memory:** implement `add(...)`, `get_messages()`, and `clear()`.
+- **Tools:** use `Tools` for text-parsed calls or `NativeTools` for native function calling; register functions with `add_tool()`.
+- **Planner:** provide `prompt`, `max_steps`, and `parse(response)`.
+- **Display:** provide a callable that accepts an event name and optional data.
+- **Retriever:** provide `search(query)` returning a list of fact strings.
+
+The components are passed to `SproutAgent` at construction, so custom implementations can be tested independently and substituted without changing the agent loop.
+
+
 ## Project Structure
 
 | Path | Responsibility |
@@ -261,6 +276,7 @@ SPROUT is an educational and experimental project, not a hardened autonomous cod
 - Retrieval returns up to three facts with cosine similarity of at least 0.5.
 - MCP support is experimental and is not connected to the default CLI flow.
 - The repository includes pytest coverage for memory summarization, retrieval, agent context, and approval-gated memory tools.
+- OS-level sandboxing for code execution is not implemented and remains a prerequisite before recommending SPROUT for untrusted workspaces.
 
 ## Acknowledgements
 
