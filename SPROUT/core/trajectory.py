@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from SPROUT.llm import Response
+from SPROUT.core.llm import Response
 
 
 @dataclass

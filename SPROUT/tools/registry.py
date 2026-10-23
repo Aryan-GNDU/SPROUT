@@ -1,6 +1,6 @@
 from typing import Callable, Any
 import json
-from SPROUT.llm import Response
+from SPROUT.core.llm import Response
 import inspect
 from pathlib import Path
 

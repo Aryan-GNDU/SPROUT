@@ -1,7 +1,7 @@
 import re
-from SPROUT.llm import Response, LLM
-from SPROUT.memory import Memory
-from SPROUT.tools import Tools
+from SPROUT.core.llm import Response, LLM
+from SPROUT.memory.conversation import Memory
+from SPROUT.tools.registry import Tools
 
 
 class ReAct:
