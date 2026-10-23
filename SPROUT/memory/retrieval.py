@@ -27,18 +27,71 @@ class DocumentRetriever:
                 )
                 """
             )
+            connection.execute(
+                """
+                DELETE FROM documents
+                WHERE id NOT IN (
+                    SELECT MIN(id)
+                    FROM documents
+                    GROUP BY text
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_text
+                ON documents (text)
+                """
+            )
             connection.commit()
 
+    def delete_document_by_id(self, document_id: int) -> int:
+        """Delete a saved fact by ID; return the number of rows deleted."""
+        with closing(sqlite3.connect(self.db_path)) as connection:
+            cursor = connection.execute(
+                "DELETE FROM documents WHERE id = ?",
+                (document_id,),
+            )
+            connection.commit()
+            return cursor.rowcount
+                
+    def list_documents(self) -> list[tuple[int, str]]:
+        """Return saved facts as (id, text), ordered by ID."""
+        with closing(sqlite3.connect(self.db_path)) as connection:
+            rows = connection.execute(
+                "SELECT id, text FROM documents ORDER BY id"
+            ).fetchall()
+
+        return [(document_id, text) for document_id, text in rows]
+
+    
     def add_document(self, text: str) -> None:
         embedding = self.embedding_model.embed(text)
         with closing(sqlite3.connect(self.db_path)) as connection:
             connection.execute(
-                "INSERT INTO documents (text, embedding) VALUES (?, ?)",
+                "INSERT OR IGNORE INTO documents (text, embedding) VALUES (?, ?)",
                 (text, json.dumps(embedding)),
             )
             connection.commit()
 
-    def search(self, query: str, limit: int = 3) -> list[str]:
+    def search(
+        self, query: str, limit: int = 3, min_similarity: float = 0.5
+    ) -> list[str]:
+        """Return relevant document text above the similarity threshold."""
+        return [
+            text
+            for _, text in self.search_with_scores(
+                query, limit, min_similarity
+            )
+        ]
+
+    def search_with_scores(
+        self,
+        query: str,
+        limit: int = 3,
+        min_similarity: float = 0.5,
+    ) -> list[tuple[float, str]]:
+        """Return relevant documents with cosine similarity scores."""
         if limit <= 0:
             return []
 
@@ -52,8 +105,13 @@ class DocumentRetriever:
             (self._cosine(query_embedding, json.loads(embedding)), text)
             for text, embedding in rows
         ]
+        ranked = [
+            (score, text)
+            for score, text in ranked
+            if score >= min_similarity
+        ]
         ranked.sort(key=lambda item: item[0], reverse=True)
-        return [text for _, text in ranked[:limit]]
+        return ranked[:limit]
 
     def delete_document(self, text: str) -> int:
         """Delete all documents whose text exactly matches; return count."""

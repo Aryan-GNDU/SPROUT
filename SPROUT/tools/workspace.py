@@ -661,6 +661,20 @@ def create_native_code_tools(workspace: str = ".",
         )
         tools.requires_approval.add("forget_fact")
 
+        def forget_fact_by_id(document_id: int) -> str:
+            """Delete a saved fact by its ID."""
+            deleted = retriever.delete_document_by_id(document_id)
+            if deleted == 0:
+                return f"No saved fact found with ID {document_id}."
+            return f"Deleted saved fact {document_id}."
+
+        tools.add_tool(
+            "forget_fact_by_id",
+            forget_fact_by_id,
+            "Delete a saved fact using its ID from the saved-facts list.",
+        )
+        tools.requires_approval.add("forget_fact_by_id")
+
         def remember_fact(fact: str) -> str:
             """Save a user-approved fact to persistent memory."""
             fact = fact.strip()

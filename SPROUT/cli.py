@@ -57,6 +57,8 @@ COMMANDS = {
     "/model": "Show current model name",
     "/tools": "List available tools",
     "/skills": "List available skills",
+    "/memories": "List saved facts and their IDs",
+
 }
 
 
@@ -99,7 +101,16 @@ def handle_command(cmd, agent):
                 else "dim"
             )
             console.print(f"     [{style}]{i}: {role}: {content}[/]")
-
+    elif cmd == "/memories":
+        if agent.retriever is None:
+            console.print("  Persistent memory is unavailable.")
+        else:
+            documents = agent.retriever.list_documents()
+            if not documents:
+                console.print("  No saved facts.")
+            else:
+                for document_id, fact in documents:
+                    console.print(f"  {document_id}: {fact}")
     # `/model` command shows current model name
     elif cmd == "/model":
         console.print(f"  [dim]{agent.llm.model}[/]")
