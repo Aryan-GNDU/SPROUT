@@ -149,6 +149,7 @@ Enter a prompt at the input line to start a task.
 | `/tools` | List registered tools |
 | `/skills` | List loaded skills |
 | `exit` or `quit` | Exit SPROUT |
+| `/memories` | List saved facts and their IDs |
 
 You can also press `Ctrl+C` to exit.
 
@@ -162,7 +163,7 @@ The default CLI registers tools in these categories:
 | **Write and manage files** | `write_file`, `edit_file`, `append_file`, `make_dir`, `delete_file`, `move_file` |
 | **Run checks** | `run_tests`, `run_linter`, `execute_python` |
 | **Git** | `git_status`, `git_diff`, `git_log`, `git_show`, `git_blame`, `git_add`, `git_commit` |
-| **Persistent memory** | `remember_fact`, `forget_fact` |
+| **Persistent memory** | `remember_fact`, `forget_fact`, `forget_fact_by_id` |
 
 File tools are scoped to the workspace passed to `create_native_code_tools()`. The CLI uses the current working directory.
 
@@ -173,7 +174,7 @@ SPROUT asks for confirmation before these tools run:
 - File changes: `write_file`, `edit_file`, `append_file`, `delete_file`, `move_file`, `make_dir`
 - Code and tests: `execute_python`, `run_tests`
 - Git changes: `git_add`, `git_commit`
-- Persistent memory changes: `remember_fact`, `forget_fact`
+- Persistent memory changes: `remember_fact`, `forget_fact`, `forget_fact_by_id`
 
 Read-only tools such as `git_status`, `git_diff`, and `search_code` do not require approval.
 
@@ -192,14 +193,12 @@ python -m pytest -q
 SPROUT uses two separate forms of memory:
 
 - **Conversation memory** is held in process memory. `SummarizationMemory` keeps system instructions and recent turns while summarizing older turns. It is cleared when SPROUT exits.
-- **Persistent fact memory** stores explicitly approved facts and their embeddings in `sprout_memory.sqlite3` at the repository root. SPROUT searches for up to three relevant facts when a task begins.
+- **Persistent fact memory** stores explicitly approved facts and their embeddings in `sprout_memory.sqlite3` at the repository root. When a task begins, SPROUT retrieves up to three facts with cosine similarity of at least `0.5`.
 
-Ask SPROUT to remember a fact, then approve the `remember_fact` tool call. To remove one, ask it to forget the exact saved text and approve `forget_fact`. `/clear` clears only conversation memory; it does not erase facts in SQLite.
+Use `/memories` to inspect saved facts and their IDs. To remove one, ask SPROUT to forget the listed ID and approve the `forget_fact_by_id` tool call. You can also remove a fact by asking SPROUT to forget its exact saved text and approving `forget_fact`. `/clear` clears only conversation memory; it does not erase facts in SQLite.
 
 To erase all persistent facts, exit SPROUT and delete `sprout_memory.sqlite3`. The database is gitignored, but it is not encrypted.
 
-> [!NOTE]
-> Retrieval currently returns the nearest matches without a relevance threshold. Review what you save, and don’t store passwords, API keys, or other secrets.
 
 ## Skills
 
@@ -259,7 +258,7 @@ SPROUT is an educational and experimental project, not a hardened autonomous cod
 
 - The default CLI loads built-in tools and skill files.
 - Persistent memory stores explicitly saved facts in local SQLite; it does not automatically index workspace files.
-- Retrieval uses the nearest matches without a relevance threshold.
+- Retrieval returns up to three facts with cosine similarity of at least 0.5.
 - MCP support is experimental and is not connected to the default CLI flow.
 - The repository includes pytest coverage for memory summarization, retrieval, agent context, and approval-gated memory tools.
 
